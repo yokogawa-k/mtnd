@@ -1,0 +1,21 @@
+sudo: required
+language: ruby
+services:
+    - docker
+before_script:
+    - docker build -t mtnd .
+    - docker run -d --device /dev/fuse --cap-add SYS_ADMIN --name mtnd-master mtnd mtnfs -f /mnt/mtnfs
+    - docker run -d --name mtnd-node01 mtnd mtnd -n -e /mtnexport
+    - docker run -d --name mtnd-node02 mtnd mtnd -n -e /mtnexport
+    - docker run -d --name mtnd-node03 mtnd mtnd -n -e /mtnexport
+    - sleep 10
+    - docker ps
+    - docker logs mtnd-master
+script:
+    - docker exec mtnd-master sh -c "echo 'foo' >/mnt/mtnfs/foo"
+    - docker exec mtnd-master ls -l /mnt/mtnfs/foo
+    - docker exec mtnd-master cat /mnt/mtnfs/foo
+    - docker exec mtnd-master chmod +x /mnt/mtnfs/foo
+    - docker exec mtnd-master chown 1000:1000 /mnt/mtnfs/foo
+    - docker exec mtnd-master ls -l /mnt/mtnfs/foo
+    #    - bundle exec rspec
