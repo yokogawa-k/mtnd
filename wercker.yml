@@ -1,0 +1,30 @@
+# vi: set ft=yaml et ts=2 sw=2 sts=0:
+
+box: wercker-labs/docker
+build:
+  steps:
+    - script:
+        name: docker build
+        code: docker build -t mtnd ./
+    - script: 
+        name: create mtnd master
+        code: |
+          docker run -d --device /dev/fuse --cap-add SYS_ADMIN --name=mtnd-master mtnd mtnfs -f /mnt/mtnfs
+    - script:
+        name: create mtnd node
+        code: |
+          docker run -d --name=mtnd-node01 mtnd mtnd -n -e /mtnexport
+          docker run -d --name=mtnd-node01 mtnd mtnd -n -e /mtnexport
+          docker run -d --name=mtnd-node01 mtnd mtnd -n -e /mtnexport
+    - script:
+        name: simple test
+        code: |
+          docker exec mtnd-master sh -c "echo 'foo' >/mnt/mtnfs/foo"
+          docker exec mtnd-master ls -l /mnt/mtnfs/foo
+          docker exec mtnd-master cat /mnt/mtnfs/foo
+          docker exec mtnd-master chmod +x /mnt/mtnfs/foo
+          docker exec mtnd-master chown 1000:1000 /mnt/mtnfs/foo
+          docker exec mtnd-master ls -l /mnt/mtnfs/foo
+
+
+
